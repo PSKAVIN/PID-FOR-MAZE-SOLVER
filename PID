@@ -1,0 +1,37 @@
+ void moveForward() {
+  // Get distance from ToF sensor
+  uint8_t range = tof.readRange();
+  
+  // Check if the reading is valid
+  if (range < 0 || range > 255) {
+    Serial.println("Invalid range reading");
+    return;
+  }
+  
+  int actualDistance = range;
+
+  // PID Control
+  float error = desiredDistance - actualDistance;
+  integral += error;
+  float derivative = error - previousError;
+  float correction = (Kp * error) + (Ki * integral) + (Kd * derivative);
+  previousError = error;
+
+  // Adjust motor speeds based on PID output
+  int baseSpeed = 220;
+  int leftMotorSpeed = constrain(baseSpeed - correction, -255, 255);
+  int rightMotorSpeed = constrain(baseSpeed + correction, -255, 255);
+
+  // Set motor speeds based on PID output
+  setMotorSpeed(leftMotorSpeed, rightMotorSpeed);
+  
+  // Debugging output
+  Serial.print("Distance: ");
+  Serial.print(actualDistance);
+  Serial.print(" mm, Error: ");
+  Serial.print(error);
+  Serial.print(", Correction: ");
+  Serial.println(correction);
+  
+  delay(100);
+}
